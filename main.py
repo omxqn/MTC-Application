@@ -6,9 +6,9 @@ import logging
 import datetime
 from database import get_availablity,update_value,search_user,set_user_game_status,get_in_game_users
 from cachetools import cached, TTLCache
-
+import pyperclip
 APP_AUTHOR = "عزام"
-APP_VERSION = "1.2"
+APP_VERSION = "1.3"
 
 global ready_now
 global error
@@ -256,9 +256,6 @@ class CheckableComboBox(QComboBox):
 
     # flush
     sys.stdout.flush()
-
-
-
 
 @cached(cache)
 class Apps(QDialog):
@@ -852,7 +849,6 @@ class Apps(QDialog):
 
 
 
-
     def user_info_function(self):
         user_id = self.get_user_data.text()
         logger.debug("user_info_function has been called")
@@ -869,11 +865,28 @@ class Apps(QDialog):
                 QMessageBox.information(self, "تحذير", "لا توجد بيانات لعب عن هذا المستخدم")
 
             for i in playing_users:
-                QMessageBox.information(self,"الّاعبون قيد اللعب",f"User ID: {i}\nName:{playing_users[i][0]}\nBooked Items: {playing_users[i][1]}\nFinishing Time: {playing_users[i][2]}")
+                dlg = QMessageBox(self)
+                dlg.setWindowTitle("الّاعبون قيد اللعب")
+                dlg.setText(f"User ID: {i}\nName:{playing_users[i][0]}\nBooked Items: {playing_users[i][1]}\nFinishing Time: {playing_users[i][2]}\n Press 'No' to copy the ID and EXIT")
+                dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                dlg.setIcon(QMessageBox.Question)
+                button = dlg.exec()
                 logger.debug(
                     f"User ID: {i}\nName:{playing_users[i][0]}\nBooked Items: {playing_users[i][1]}\nFinishing Time: {playing_users[i][2]}")
+                if button == QMessageBox.Yes:
+                    logger.debug("Pressed Yes, Continuing")
+                    continue
+                else:
+                    logger.debug("Pressed No, Breaking")
+
+                    pyperclip.copy(i)
+                    QMessageBox.information(self, "تحذير", "تم نسخ الرقم الجامعي فالحافظة")
+                    logger.debug(f" تم نسخ الرقم الجامعي فالحافظة {i}")
+                    break
         except:
-            QMessageBox.information(self,"تحذير","لا توجد بيانات لعب عن هذا المستخدم")
+            QMessageBox.warning(self,"تحذير","لا توجد بيانات لعب عن هذا المستخدم")
+
+
 
     def check_box_clicked(self):
         global btn_info
