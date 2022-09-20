@@ -5,6 +5,7 @@ import datetime
 import logging
 global times
 global date
+import ast
 from cachetools import cached, TTLCache
 cache = TTLCache(maxsize=100, ttl=86400)
 global items_id
@@ -168,36 +169,6 @@ def set_user_game_status(user_id):
     db.commit()
     logger.debug(f"User status{user_id}, has been updated to 'finished'")
 
-def fix(x):
-    s=x
-    val1 = ""
-    global counts
-    counts = 0
-    rounds = 0
-
-    for i in s:
-
-        if i == "'":
-            rounds += 1
-            counts = 1
-        if counts == 1 and rounds % 2 != 0 and i != "'":
-            val1 += i
-        else:
-            continue
-
-    global t
-    t = ""
-    g = {}
-    for i in val1:
-
-        if i.isdigit():
-            g.update({t: i})
-            t = ""
-        else:
-            t += i
-    print(g)
-    return g
-
 def get_in_game_users(user_id=None):
     datas = []
     data = {}
@@ -209,7 +180,7 @@ def get_in_game_users(user_id=None):
             for i in my_curser:
                 datas.append(i)
             for s in datas:
-                data.update({s[0]: [s[1], fix(s[2]), s[3]]})
+                data.update({s[0]: [s[1], ast.literal_eval(s[2]), s[3]]})
             return data
         else:
             my_curser.execute(
@@ -218,7 +189,7 @@ def get_in_game_users(user_id=None):
             for i in my_curser:
                 datas.append(i)
             for s in datas:
-                data.update({s[0]: [s[1], fix(s[2]), s[3]]})
+                data.update({s[0]: [s[1], ast.literal_eval(s[2]), s[3]]})
             return data
 
     except:
@@ -234,7 +205,7 @@ def search_user(user_id):
             for g in i:
                 x.append(g)
         s = x[2]
-        return fix(s)
+        return ast.literal_eval(s)
     except:
         return False
 def new_booking(student_id,booking_type,booking_details,booking_time,finishing_date,phone_number=None,name=None):
@@ -252,6 +223,8 @@ def new_booking(student_id,booking_type,booking_details,booking_time,finishing_d
 
 start()
 if __name__ == "__main__":
+    print(search_user(2103100))
+
     #print(get_in_game_users())
 
     #print(search_user("2103100"))
