@@ -4,7 +4,7 @@ Hello <3
 I made this app For MTC
 
 
--- You need to configure DataBase To make the app start......
+-- You need to configure Database To make the App start......
 
 1- First Download Xampp program from The offical website 
 https://www.apachefriends.org/download.html
@@ -15,7 +15,7 @@ https://www.apachefriends.org/download.html
 NOTICE: DON'T CHANGE THE SERVERS PORT or the Credintial information
 
 4- We need to import the database, 
-Go to http://localhost/phpmyadmin/server_sql.php
+Go to http://localhost/phpmyadmin/server_sql.php or http://localhost/phpmyadmin/index.php?route=/server/sql **Depends on phpmyadmin version**
 And paste the SQl script from 'test.sql' into the line Edit Then press Go
 
 5- start the app
