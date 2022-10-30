@@ -1,14 +1,22 @@
 import threading
-from PyQt5.Qt import QDialog,QPushButton,QLineEdit,QLabel,QMessageBox,QComboBox,QCheckBox,QFormLayout,QApplication,QDir,QFont,QFontDatabase,Qt,QIcon,QStandardItemModel,QRect,QPixmap
+import datetime
+
+import random
+from PyQt5.Qt import QColor,QTableWidget, QDialog,QPushButton,QLineEdit,QLabel,QMessageBox,QComboBox,QCheckBox,QFormLayout,QApplication,QDir,QFont,QFontDatabase,Qt,QIcon,QStandardItemModel,QRect,QPixmap
 import sys
 import os
 import logging
-import datetime
+from PyQt5 import QtWidgets
+
+
 from database import get_availablity,update_value,search_user,set_user_game_status,get_in_game_users
 from cachetools import cached, TTLCache
-import pyperclip
+
+
+import pyqtgraph as pg
 APP_AUTHOR = "عزام"
-APP_VERSION = "1.3"
+APP_VERSION = "2.0"
+
 
 global ready_now
 global error
@@ -19,7 +27,6 @@ connection_error = False
 cache = TTLCache(maxsize=100, ttl=86400)
 global selected_items
 selected_items = []
-
 
 
 date = str(datetime.datetime.now().date())
@@ -161,7 +168,6 @@ _id = QFontDatabase.addApplicationFont("Fonts\Cairo-Bold.ttf")
 dir_ = QDir("Cairo-light")
 _id = QFontDatabase.addApplicationFont("Fonts\Cairo-Light.ttf")
 
-
 # creating checkable combo box class
 class CheckableComboBox(QComboBox):
     def __init__(self):
@@ -257,6 +263,78 @@ class CheckableComboBox(QComboBox):
     # flush
     sys.stdout.flush()
 
+
+
+class AnotherWindow(QtWidgets.QMainWindow):
+    """
+    This "window" is a QWidget. If it has no parent,
+    it will appear as a free-floating window.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        layout = QFormLayout()
+        self.label = QLabel("Another Window % d" % random.randint(0, 100))
+        layout.addWidget(self.label)
+        self.setWindowTitle("أحصائيات حجز النادي الترفيهي")
+
+        self.setLayout(layout)
+        self.graphWidget = pg.PlotWidget()
+        self.setCentralWidget(self.graphWidget)
+        self.graphWidget.scale(1, 1)
+        from database import get_all_data
+        users = []
+        ruf_dates = []
+        dates = []
+        all_data = get_all_data()
+
+        for i in all_data:
+            for s in i:
+
+                if s.isdigit():
+                    pass
+                else:
+
+                    ruf_dates.append(s)
+
+        for g in ruf_dates:
+            dates.append(g.split(" ")[0].split("-")[2])
+
+        dates_nodoublecates = list(dict.fromkeys(dates))
+
+        for a in dates_nodoublecates:
+            users.append(dates.count(a))
+        print(f"Users list: {users}")
+        dates_nodoublecates = [int(x) for x in dates_nodoublecates]
+        print(f"Days list: {dates_nodoublecates}")
+
+        for i, item in enumerate(dates_nodoublecates):
+            try:
+                if item - 1 == dates_nodoublecates[i + 1]:
+
+                    print(item, i)
+                else:
+
+                    dates_nodoublecates.insert(i + 1, item - 1)
+                    users.insert(i + 1, 0)
+            except:
+                pass
+
+        hour = dates_nodoublecates
+        # hour = [100,2,3,4,5,6,7,8,9,10]
+        temperature = users
+        # hour = users
+        # temperature = dates
+        self.graphWidget.setBackground('w')
+        self.graphWidget.setTitle("<span style=\"color:blue;font-size:18pt\">Monthly Data for booking</span>")
+        self.graphWidget.setLabel('left', "<span style=\"color:red;font-size:20px\">Users per day</span>")
+        self.graphWidget.setLabel('bottom', "<span style=\"color:red;font-size:20px\">Date Days</span>")
+
+        pen = pg.mkPen(color=(255, 0, 0))
+        self.graphWidget.plot(hour, temperature, pen=pen, symbolSize=5, symbolBrush=('b'))
+
+
 @cached(cache)
 class Apps(QDialog):
     global ready
@@ -273,6 +351,7 @@ class Apps(QDialog):
         current_dir = os.path.dirname(os.path.realpath(__file__))
         QDialog.__init__(self)
         layout = QFormLayout()
+
 
 
         self.i = 0
@@ -308,7 +387,7 @@ class Apps(QDialog):
         self.photo.setText("")
         self.photo.setScaledContents(True)
         self.photo.setObjectName("photo")
-        self.photo.setPixmap(QPixmap("logo.png"))
+        self.photo.setPixmap(QPixmap("assets\logo.png"))
         self.photo.move(450,0)
         #self.item.addItem(self.item)
         #self.checking = PyQt5.Qt.QTextList()
@@ -318,7 +397,7 @@ class Apps(QDialog):
 
         font = QFont("Cairo")
         font1 = QFont("Cairo-light")
-        self.btn_download = QPushButton("إدخال المنتج")
+        self.btn_download = QPushButton("إدخال")
         btn_info = QPushButton("معلومات", self)
 
 
@@ -409,7 +488,7 @@ class Apps(QDialog):
 
 
 
-        btn_info.setGeometry(10, 280, 10, 10)
+        btn_info.setGeometry(20, 380, 20, 20)
         self.check_box.setGeometry(0,0,200,50)
         self.booking_option.currentTextChanged.connect(self.check_formats)
         self.booking_type.currentTextChanged.connect(self.booking_type_function)
@@ -425,7 +504,7 @@ class Apps(QDialog):
         self.setFixedWidth(self.width)
         self.setFixedHeight(self.hight)
         self.setAutoFillBackground(10)
-        self.setWindowIcon(QIcon(os.path.join(current_dir, 'icon.ico')))
+        self.setWindowIcon(QIcon(os.path.join(current_dir, 'assets\icon.ico')))
 
         self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
@@ -582,13 +661,14 @@ class Apps(QDialog):
         self.line.show()
         fonts = QFont("Cairo", 9)
         self.line.setFont(fonts)
-        btn_info.move(15, 385)
+        btn_info.move(15, 380)
 
         # Current playing
-        font3 =QFont("Cairo",12)
+        font3 = QFont("Cairo",12)
         global playing_number
         playing_number = 0
         playing_users = get_in_game_users()
+
         for i in playing_users:
             playing_number += 1
 
@@ -602,11 +682,12 @@ class Apps(QDialog):
         self.current_playing.show()
         self.current_playing.setFont(font3)
 
-
-
-
-
         logger.debug("Checking for internet connection (Connecting to the Database)")
+
+        self.new_tables()
+        self.tables.hide()
+        self.playing_users_tables.hide()
+
         while True:
 
             if ready_now and not connection_error:
@@ -630,7 +711,160 @@ class Apps(QDialog):
                     QMessageBox.warning(self, "تحذير", "Check your internet connection then click OK")
                     sys.exit()
 
+    def new_tables(self):
 
+        availability = get_availablity()
+        availability = dict(availability)
+        logger.debug("fffff")
+        logger.debug(f"Currently booking status data: {availability}")
+        from tables import create_table
+        test = []
+        for i, item in enumerate(availability):
+            test.append([item])
+            for s in availability[item]:
+                test[i].append(s)
+        logger.debug("000000")
+        # ["asdf",0,0,0,0]
+        global gdata
+        gdata = {}
+        for i, item in enumerate(test):
+            if i == 0:
+                gdata.update({"Item Name": item})
+            elif i == 1:
+                gdata.update({"Total": item})
+            elif i == 2:
+                gdata.update({"Used": item})
+            elif i == 3:
+                gdata.update({"Available": item})
+            else:
+                gdata.update({str(random.randint(0, 1000)): item})
+        print(gdata)
+        logger.debug("11111")
+
+        self.tables = create_table(data=gdata, height=len(gdata), width=4)
+        self.layout().addWidget(self.tables)
+        self.layout().removeWidget(self.tables)
+        self.tables.unsetLayoutDirection()
+        self.tables.move(30, 80)
+        self.tables.setFixedWidth(350)
+        self.tables.setFixedHeight(310)
+        self.tables.show()
+        logger.debug("22222")
+        # if you don't want to allow in-table editing, either disable the table like:
+        self.tables.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.tables.resizeColumnsToContents()
+        self.tables.resizeRowsToContents()
+
+        playing_users = get_in_game_users()
+        print(playing_users)
+        logger.debug("2222")
+        tests = []
+        for i, item in enumerate(playing_users):
+            tests.append([item])
+            for s in playing_users[item]:
+                tests[i].append(s)
+
+        # ["asdf",0,0,0,0]
+        global playing_users_for_table
+        playing_users_for_table = {}
+        for i, item in enumerate(tests):
+            playing_users_for_table.update({str(random.randint(0, 1000)): item})
+        print(playing_users_for_table)
+
+        self.playing_users_tables = create_table(data=playing_users_for_table, height=len(playing_users_for_table),width=4)
+        logger.debug("55555")
+        self.playing_users_tables.setHorizontalHeaderLabels(
+            ["Student ID", "Student Name", "Booking Info", "Finishing Time"])
+        self.playing_users_tables.resizeColumnsToContents()
+        logger.debug("66666")
+        self.layout().addWidget(self.playing_users_tables)
+        self.layout().removeWidget(self.playing_users_tables)
+        self.playing_users_tables.unsetLayoutDirection()
+        self.playing_users_tables.move(660, 80)
+        logger.debug("7777")
+        self.playing_users_tables.setFixedWidth(300)
+        self.playing_users_tables.setFixedHeight(300)
+        self.playing_users_tables.show()
+
+        # if you don't want to allow in-table editing, either disable the table like:
+        self.playing_users_tables.setEditTriggers(QTableWidget.NoEditTriggers)
+        # create a connection to the double click event
+        self.playing_users_tables.itemDoubleClicked.connect(self.cell_double_clicked)
+
+        for i in range(0, len(gdata)):  # change Used table color
+            self.tables.item(i, 2).setBackground(QColor(255, 0, 0))
+
+        for w in range(0, len(gdata)):  # available table color
+            self.tables.item(w, 3).setBackground(QColor(44, 209, 18))
+        logger.debug("888")
+        try:
+            icon_file = "assets\ibilliard_cue.jpg"
+            status_item = self.tables.item(0, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\ibilliard_cue_helper.jpg"
+            status_item = self.tables.item(1, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\ping_pong_balls.jpg"
+            status_item = self.tables.item(2, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\ping_pong_rackets.jpg"
+            status_item = self.tables.item(3, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\small_football.png"
+            status_item = self.tables.item(4, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\kayram.jpg"
+            status_item = self.tables.item(5, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\kayram.jpg"
+            status_item = self.tables.item(6, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\chess.jpg"
+            status_item = self.tables.item(7, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\dominios.jpg"
+            status_item = self.tables.item(8, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\wild_cards2.jpg"
+            status_item = self.tables.item(9, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\iuno.jpg"
+            status_item = self.tables.item(10, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\kayram_powder.jpg"
+            status_item = self.tables.item(11, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\ps4_controller.jpg"
+            status_item = self.tables.item(12, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\cable.jpg"
+            status_item = self.tables.item(13, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\game_cover.jpg"
+            status_item = self.tables.item(14, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+            icon_file = "assets\game_cover.jpg"
+            status_item = self.tables.item(15, 0)
+            status_item.setIcon(QIcon(QPixmap(icon_file)))
+
+
+        except:
+            logger.debug("Error in setting Icons for table")
     def show_all(self):
         self.type1.show()
         self.type2.show()
@@ -849,70 +1083,34 @@ class Apps(QDialog):
 
 
 
-    def user_info_function(self):
-        user_id = self.get_user_data.text()
-        logger.debug("user_info_function has been called")
-        try:
-            if user_id!= "":
-
-                playing_users = get_in_game_users(user_id)
-                logger.debug(f"Gathered information: {playing_users}")
-            else:
-                playing_users = get_in_game_users()
-                logger.debug(f"Gathered information (All playing users): {playing_users}")
-
-            if playing_users == {}:
-                QMessageBox.information(self, "تحذير", "لا توجد بيانات لعب عن هذا المستخدم")
-
-            for i in playing_users:
-                dlg = QMessageBox(self)
-                dlg.setWindowTitle("الّاعبون قيد اللعب")
-                dlg.setText(f"User ID: {i}\nName:{playing_users[i][0]}\nBooked Items: {playing_users[i][1]}\nFinishing Time: {playing_users[i][2]}\n Press 'No' to copy the ID and EXIT")
-                dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                dlg.setIcon(QMessageBox.Question)
-                button = dlg.exec()
-                logger.debug(
-                    f"User ID: {i}\nName:{playing_users[i][0]}\nBooked Items: {playing_users[i][1]}\nFinishing Time: {playing_users[i][2]}")
-                if button == QMessageBox.Yes:
-                    logger.debug("Pressed Yes, Continuing")
-                    continue
-                else:
-                    logger.debug("Pressed No, Breaking")
-
-                    pyperclip.copy(i)
-                    QMessageBox.information(self, "تحذير", "تم نسخ الرقم الجامعي فالحافظة")
-                    logger.debug(f" تم نسخ الرقم الجامعي فالحافظة {i}")
-                    break
-        except:
-            QMessageBox.warning(self,"تحذير","لا توجد بيانات لعب عن هذا المستخدم")
-
-
 
     def check_box_clicked(self):
         global btn_info
+
         self.i += 1
 
         logger.debug("check_box_clicked has been called")
-        self.get_user_data = QLineEdit()
-        self.send = QPushButton("بحث عن المستخدم")
-        self.get_user_data.setPlaceholderText("الرقم الجامعي (اختياري)")
+        self.window1 = AnotherWindow()
+        self.send = QPushButton("عرض إحصائية الحجز")
+
         self.send.setDefault(True)
 
-        layout.addWidget(self.get_user_data)
         layout.addWidget(self.send)
-        layout.removeWidget(self.get_user_data)
+
         layout.removeWidget(self.send)
 
-        self.get_user_data.move(515,200)
-        self.get_user_data.show()
-        self.get_user_data.setFixedHeight(40)
-        self.get_user_data.setFixedWidth(130)
 
-        self.send.move(530, 300)
+        self.send.move(480, 250)
         self.send.show()
-        self.send.clicked.connect(self.user_info_function)
+        self.send.clicked.connect(lambda checked: self.show_win(self.window1))
         self.send.setFixedHeight(50)
         self.send.setFixedWidth(100)
+        self.send.setFont(QFont("Cairo"))
+        self.new_tables()
+
+
+
+
 
         if self.i % 2 == 0:
             logger.debug("Check box has been Unchecked")
@@ -927,23 +1125,12 @@ class Apps(QDialog):
             btn_info.show()
             logger.debug("All widgets has been shown")
 
-            self.billiard_cue.hide()
-            self.billiard_helper_cue.hide()
-            self.ping_pong_ball.hide()
-            self.ping_pong_racket.hide()
-            self.small_football.hide()
-            self.kayram_wooden_rings.hide()
-            self.kayram_plastic_rings.hide()
-            self.chess.hide()
-            self.dominoes.hide()
-            self.wild_cards.hide()
-            self.uno.hide()
-            self.kayram_powder.hide()
-            self.ps4_controller.hide()
-            self.usb_cables.hide()
-            self.ps4_games.hide()
+
             self.send.hide()
-            self.get_user_data.hide()
+
+            self.playing_users_tables.hide()
+            self.tables.hide()
+
 
 
         if self.i % 2 != 0:
@@ -962,154 +1149,8 @@ class Apps(QDialog):
             font = QFont("Cairo", 8)
 
             logger.debug("Gathered successfully")
-
-            availability = get_availablity()
-            availability = dict(availability)
-            logger.debug(f"Currently booking status data: {availability}")
-
-
-            self.billiard_cue = QLabel(f"billiard cue || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['billiard_cue'][2]}, مستخدم: {availability['billiard_cue'][1]}")
-            self.billiard_helper_cue = QLabel(f"billiard helper cue || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['billiard_helper_cue'][2]}, مستخدم: {availability['billiard_helper_cue'][1]}")
-            self.ping_pong_ball = QLabel(f"Ping pong balls || المجموع: {availability['billiard_cue'][0]} متاح: {availability['ping_pong_ball'][2]}, مستخدم: {availability['ping_pong_ball'][1]}")
-            self.ping_pong_racket = QLabel(f"Ping pong rackets || المجموع: {availability['billiard_cue'][0]} متاح: {availability['ping_pong_racket'][2]}, مستخدم: {availability['ping_pong_racket'][1]}")
-            self.small_football = QLabel(f"Small football || المجموع: {availability['billiard_cue'][0]} متاح: {availability['small_football'][2]}, مستخدم: {availability['small_football'][1]}")
-            self.kayram_wooden_rings = QLabel(f"kayram wooden rings || المجموع: {availability['billiard_cue'][0]} متاح: {availability['kayram_wooden_rings'][2]}, مستخدم: {availability['kayram_wooden_rings'][1]}")
-            self.kayram_plastic_rings = QLabel(f"kayram plastic rings || المجموع:  {availability['billiard_cue'][0]} متاح: {availability['kayram_plastic_rings'][2]}, مستخدم: {availability['kayram_plastic_rings'][1]}")
-            self.chess = QLabel(f"Chess || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['chess'][2]}, مستخدم: {availability['chess'][1]}")
-            self.dominoes = QLabel(f"dominoes || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['dominoes'][2]}, مستخدم: {availability['dominoes'][1]}")
-            self.wild_cards = QLabel(f"Wild cards || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['wild_cards'][2]}, مستخدم: {availability['wild_cards'][1]}")
-            self.uno = QLabel(f"UNO ||المجموع: {availability['billiard_cue'][0]} متاح: {availability['uno'][2]}, مستخدم: {availability['uno'][1]}")
-            self.kayram_powder = QLabel(f"Kayram Powder || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['kayram_powder'][2]}, مستخدم: {availability['kayram_powder'][1]}")
-            self.ps4_controller = QLabel(f"PS4 Controllers ||المجموع : {availability['billiard_cue'][0]}  متاح: {availability['ps4_controller'][2]}, مستخدم: {availability['ps4_controller'][1]}")
-            self.usb_cables = QLabel(f"USB Cables || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['usb_cables'][2]}, مستخدم: {availability['usb_cables'][1]}")
-            self.ps4_games = QLabel(f"PS4 Games || المجموع: {availability['billiard_cue'][0]}  متاح: {availability['ps4_games'][2]}, مستخدم: {availability['ps4_games'][1]}")
-
-
-            layout.addWidget(self.billiard_cue)
-            layout.removeWidget(self.billiard_cue)
-
-            layout.addWidget(self.billiard_helper_cue)
-            layout.removeWidget(self.billiard_helper_cue)
-
-            layout.addWidget(self.ping_pong_ball)
-            layout.removeWidget(self.ping_pong_ball)
-
-            layout.addWidget(self.ping_pong_racket)
-            layout.removeWidget(self.ping_pong_racket)
-
-            layout.addWidget(self.small_football)
-            layout.removeWidget(self.small_football)
-
-            layout.addWidget(self.kayram_wooden_rings)
-            layout.removeWidget(self.kayram_wooden_rings)
-
-            layout.addWidget(self.kayram_plastic_rings)
-            layout.removeWidget(self.kayram_plastic_rings)
-
-            layout.addWidget(self.chess)
-            layout.removeWidget(self.chess)
-
-            layout.addWidget(self.dominoes)
-            layout.removeWidget(self.dominoes)
-
-            layout.addWidget(self.wild_cards)
-            layout.removeWidget(self.wild_cards)
-
-            layout.addWidget(self.uno)
-            layout.removeWidget(self.uno)
-
-            layout.addWidget(self.kayram_powder)
-            layout.removeWidget(self.kayram_powder)
-
-            layout.addWidget(self.ps4_controller)
-            layout.removeWidget(self.ps4_controller)
-
-            layout.addWidget(self.kayram_powder)
-            layout.removeWidget(self.kayram_powder)
-
-            layout.addWidget(self.usb_cables)
-            layout.removeWidget(self.usb_cables)
-
-            layout.addWidget(self.ps4_games)
-            layout.removeWidget(self.ps4_games)
-
-            self.billiard_cue.setGeometry(0, 0, 280, 100)
-            self.billiard_cue.move(50,10)
-            self.billiard_cue.show()
-            self.billiard_cue.setFont(font)
-
-            self.billiard_helper_cue.setGeometry(0, 0, 280, 100)
-            self.billiard_helper_cue.move(50, 40)
-            self.billiard_helper_cue.show()
-            self.billiard_helper_cue.setFont(font)
-
-            self.ping_pong_ball.setGeometry(50, -140, 280, 100)
-            self.ping_pong_ball.move(50, 70)
-            self.ping_pong_ball.show()
-            self.ping_pong_ball.setFont(font)
-
-            self.ping_pong_racket.setGeometry(50,200,280,100)
-            self.ping_pong_racket.move(50, 100)
-            self.ping_pong_racket.show()
-            self.ping_pong_racket.setFont(font)
-
-            self.small_football.setGeometry(50,200,280,100)
-            self.small_football.move(50, 130)
-            self.small_football.show()
-            self.small_football.setFont(font)
-
-            self.kayram_wooden_rings.setGeometry(50,200,280,100)
-            self.kayram_wooden_rings.move(50, 160)
-            self.kayram_wooden_rings.show()
-            self.kayram_wooden_rings.setFont(font)
-
-            self.kayram_plastic_rings.setGeometry(50,200,280,100)
-            self.kayram_plastic_rings.move(50, 190)
-            self.kayram_plastic_rings.show()
-            self.kayram_plastic_rings.setFont(font)
-
-            self.chess.setGeometry(50,200,280,100)
-            self.chess.move(50, 220)
-            self.chess.show()
-            self.chess.setFont(font)
-
-            self.dominoes.setGeometry(50,200,280,100)
-            self.dominoes.move(50, 250)
-            self.dominoes.show()
-            self.dominoes.setFont(font)
-
-            self.wild_cards.setGeometry(50,200,280,100)
-            self.wild_cards.move(50, 280)
-            self.wild_cards.show()
-            self.wild_cards.setFont(font)
-
-            self.uno.setGeometry(50,200,280,100)
-            self.uno.move(50, 310)
-            self.uno.show()
-            self.uno.setFont(font)
-
-            self.kayram_powder.setGeometry(50,200,280,100)
-            self.kayram_powder.move(50, 335)
-            self.kayram_powder.show()
-            self.kayram_powder.setFont(font)
-
-            self.ps4_controller.setGeometry(50,200,280,100)
-            self.ps4_controller.move(50, 360)
-            self.ps4_controller.show()
-            self.ps4_controller.setFont(font)
-
-            self.usb_cables.setGeometry(50,200,280,100)
-            self.usb_cables.move(50, 380)
-            self.usb_cables.show()
-            self.usb_cables.setFont(font)
-
-            self.ps4_games.setGeometry(50,200,280,100)
-            self.ps4_games.move(50, 400)
-            self.ps4_games.show()
-            self.ps4_games.setFont(font)
-
-
-            logger.debug("Booking status has been displayed")
+            self.playing_users_tables.show()
+            self.tables.show()
 
 
     def establish_database(self):
@@ -1160,6 +1201,55 @@ class Apps(QDialog):
                 data.update({i:self.type15.text()})
 
         logger.debug(f"Selected data(In dictionary) {data}")
+
+
+
+    def cell_double_clicked(self):
+
+        current_row = self.playing_users_tables.currentRow()
+        current_column = self.playing_users_tables.currentColumn()
+        cell_value = self.playing_users_tables.item(current_row, current_column).text()
+        print(cell_value)
+        try:
+            if cell_value.isdigit():
+                dlg = QMessageBox(self)
+                dlg.setWindowTitle("تحذير بأنهاء لعب للمستخدم")
+                dlg.setText(f"Do you really want to finish User ID's: {cell_value} game?\n هل أنت حقاً متأكد بإنهاء اللعب للطالب هذا؟")
+                dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                dlg.setIcon(QMessageBox.Question)
+                button = dlg.exec()
+                if button == QMessageBox.Yes:
+                    logger.debug("Pressed Yes, Continuing")
+                    try:
+                        logger.debug("Registering user as finished....")
+                        if type(search_user(cell_value)) == dict:
+                            update_availability_minus(cell_value)
+                            set_user_game_status(cell_value)
+                            QMessageBox.information(self, "معلومات", "تم تسجيل إنهاء اللعب للمستخدم")
+                            logger.debug(f"Return (Finished) for user: {cell_value} Has succeed")
+                            playing_number = 0
+                            playing_users = get_in_game_users()
+                            for i in playing_users:
+                                playing_number += 1
+                            self.current_playing.setText(f"المستخدمون قيد اللعب الان: {playing_number}")
+
+                            logger.debug(f"Currently playing users is updated: {playing_number}")
+                        else:
+                            QMessageBox.warning(self, "تحذير", "لا توجد بيانات لهذا المستخدم")
+                    except:
+                        QMessageBox.warning(self, "تحذير", "لا توجد بيانات لهذا المستخدم")
+
+                    print(f"User {cell_value} has been deleted")
+
+
+
+                else:
+                    logger.debug("Pressed No, Breaking")
+
+
+
+        except:
+            logger.debug("Error while removing player from table")
 
 
     def types(self):
@@ -1299,11 +1389,19 @@ class Apps(QDialog):
             QMessageBox.warning(self,"تحذير","حدث خطأ ما يرجى المحاولة من جديد")
             logger.debug("Something went wrong")
 
-    def info(self):
+    def show_win(self,window):
+        try:
+            if window.isVisible():
+                window.hide()
+            else:
+                window.show()
+        except:
+            print("hi")
+
+    def info(self,window):
+
         QMessageBox.information(self,"معلومات عن البرنامج ",f"تم انشاء هذا البرنامج بواسطة {APP_AUTHOR} للكلية العسكرية التقنية\n\n  إصدار البرنامج: {APP_VERSION} \n\n للاستفسار و الابلاغات: 90625671")
         logger.debug("Info button has been clicked")
-
-
 
 dialog = Apps()
 dialog.show()

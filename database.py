@@ -1,5 +1,5 @@
 
-# pip install mysql-connector-python
+# pip install mysql-connector-python ,install mysql-connector-python==8.0.29
 import mysql.connector
 import datetime
 import logging
@@ -41,16 +41,12 @@ logger.setLevel(logging.DEBUG)
 
 @cached(cache)
 def start():
-    global times
+    global timesss
     global date
     global db
     global my_curser
     date = datetime.datetime.now().date()
-    times = datetime.datetime.now().time().strftime(f'%H:%M:%S')
-    """        host='db4free.net',
-        user='sojjadah',
-        passwd='sojjadah99',
-        database='sojjadah')"""
+
     db = mysql.connector.connect(
         host='localhost',
         user='root',
@@ -58,6 +54,10 @@ def start():
         database='test')
     my_curser = db.cursor()
     logger.debug("Database connected successfully")
+
+
+
+
 # Create new table
 '''
 # view table descriptions
@@ -90,15 +90,18 @@ def delete_all(table_name):
 
 def add_new_booking(table, user_id, booking_type, booking_details, booking_time, finish_date,phone_number="Null", name="Null",status='in_game'):  # Insert new details
     '''Add new data in elements'''
+    global timesss
+
     # table = id_list
     #user_id VARCHAR(300),name VARCHAR(300) ,phone_number VARCHAR(300) ,book_date VARCHAR(300),finish_date
     try:
         my_curser.execute(
-            f'INSERT INTO {table} (user_id, status, name, booking_type, booking_detail, booking_time, phone_number, book_date,finish_date) VALUES {(user_id, status, name, booking_type, booking_details, booking_time, phone_number, str(date)+" "+str(times), finish_date )}')
+            f'INSERT INTO {table} (user_id, status, name, booking_type, booking_detail, booking_time, phone_number, book_date,finish_date) VALUES {(user_id, status, name, booking_type, booking_details, booking_time, phone_number, str(date)+" "+str(timesss), finish_date )}')
         logger.debug("committing")
         db.commit()
         logger.debug("Data saved successfully in database")
-    except Exception:
+        print("succ")
+    except:
         logger.debug("Error")
 
 
@@ -218,13 +221,23 @@ def new_booking(student_id,booking_type,booking_details,booking_time,finishing_d
     logger.debug(f"New booking has been added {student_id,booking_type,booking_details,booking_time,finishing_date,name}- Database")
 
 
+def get_all_data():
+    datas = []
+    print("Gathering information of all data in booking database's table")
+    my_curser.execute(f'SELECT user_id,book_date FROM entertain_booking ORDER BY Book_ID DESC')
 
+    for i in my_curser:
+        datas.append(i)
+
+
+    return datas
 
 
 start()
 if __name__ == "__main__":
     print(search_user(2103100))
-
+    #print(add_new_booking(table='entertain_booking',user_id="11111",booking_type='d',booking_details="gfdgdfg",booking_time="10:22",finish_date="10/10/1001",name="ss",phone_number="33"))
+    print(get_all_data())
     #print(get_in_game_users())
 
     #print(search_user("2103100"))
