@@ -2,7 +2,7 @@ import threading
 import datetime
 
 import random
-from PyQt5.Qt import QColor,QTableWidget, QDialog,QPushButton,QLineEdit,QLabel,QMessageBox,QComboBox,QCheckBox,QFormLayout,QApplication,QDir,QFont,QFontDatabase,Qt,QIcon,QStandardItemModel,QRect,QPixmap
+from PyQt5.Qt import QColor,QTableWidget, QTableWidgetItem, QDialog,QPushButton,QLineEdit,QLabel,QMessageBox,QComboBox,QCheckBox,QFormLayout,QApplication,QDir,QFont,QFontDatabase,Qt,QIcon,QStandardItemModel,QRect,QPixmap
 import sys
 import os
 import logging
@@ -11,11 +11,11 @@ from PyQt5 import QtWidgets
 
 from database import get_availablity,update_value,search_user,set_user_game_status,get_in_game_users
 from cachetools import cached, TTLCache
-
-
+import pyperclip
+from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 APP_AUTHOR = "عزام"
-APP_VERSION = "2.0"
+APP_VERSION = "1.3"
 
 
 global ready_now

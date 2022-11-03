@@ -1,6 +1,7 @@
 import datetime
 def get_finish_date(time):
 
+    date = datetime.datetime.now().date()
     times = datetime.datetime.now().time().strftime(f'%H:%M:%S')
     print("Before: ",times)
     hour,minut,sec = str(times).split(':')[0],str(times).split(':')[1],str(times).split(':')[2]
