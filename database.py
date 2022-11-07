@@ -168,7 +168,7 @@ def add_new(table, item_name, price, sale_type, quantity):
     pass
 
 def set_user_game_status(user_id):
-    my_curser.execute(f'UPDATE `entertain_booking` SET `status` = "finished" WHERE (user_id=%s AND status="in_game") ' % str(user_id))
+    my_curser.execute(f'UPDATE `entertain_booking` SET `status` = "finished" WHERE (user_id=%s AND status="in_game") ' % str(user_id),multi=True)
     db.commit()
     logger.debug(f"User status{user_id}, has been updated to 'finished'")
 
@@ -237,7 +237,7 @@ start()
 if __name__ == "__main__":
     print(search_user(2103100))
     #print(add_new_booking(table='entertain_booking',user_id="11111",booking_type='d',booking_details="gfdgdfg",booking_time="10:22",finish_date="10/10/1001",name="ss",phone_number="33"))
-    print(get_all_data())
+    #print(get_all_data())
     #print(get_in_game_users())
 
     #print(search_user("2103100"))

@@ -1,8 +1,8 @@
-import threading
+from threading import Thread
 import datetime
-
+import time
 import random
-from PyQt5.Qt import QColor,QTableWidget, QTableWidgetItem, QDialog,QPushButton,QLineEdit,QLabel,QMessageBox,QComboBox,QCheckBox,QFormLayout,QApplication,QDir,QFont,QFontDatabase,Qt,QIcon,QStandardItemModel,QRect,QPixmap
+from PyQt5.Qt import QColor,QTableWidget, QDialog,QPushButton,QLineEdit,QLabel,QMessageBox,QComboBox,QCheckBox,QFormLayout,QApplication,QDir,QFont,QFontDatabase,Qt,QIcon,QStandardItemModel,QRect,QPixmap
 import sys
 import os
 import logging
@@ -11,11 +11,11 @@ from PyQt5 import QtWidgets
 
 from database import get_availablity,update_value,search_user,set_user_game_status,get_in_game_users
 from cachetools import cached, TTLCache
-import pyperclip
-from pyqtgraph import PlotWidget, plot
+
+
 import pyqtgraph as pg
 APP_AUTHOR = "عزام"
-APP_VERSION = "1.3"
+APP_VERSION = "2.0"
 
 
 global ready_now
@@ -154,11 +154,9 @@ def update_availability_minus(user_id):
 
 
 
-thread = threading.Thread(target=connect_database,args=['','','',''])
+thread = Thread(target=connect_database,args=['','','',''])
 thread.start()
 asci = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM.+-*/=][{}()':;?><,~`!@#$%^&*| "
-
-
 
 
 
@@ -264,7 +262,6 @@ class CheckableComboBox(QComboBox):
     sys.stdout.flush()
 
 
-
 class AnotherWindow(QtWidgets.QMainWindow):
     """
     This "window" is a QWidget. If it has no parent,
@@ -305,15 +302,15 @@ class AnotherWindow(QtWidgets.QMainWindow):
 
         for a in dates_nodoublecates:
             users.append(dates.count(a))
-        print(f"Users list: {users}")
+        logger.debug(f"Users list: {users}")
         dates_nodoublecates = [int(x) for x in dates_nodoublecates]
-        print(f"Days list: {dates_nodoublecates}")
+        logger.debug(f"Days list: {dates_nodoublecates}")
 
         for i, item in enumerate(dates_nodoublecates):
             try:
                 if item - 1 == dates_nodoublecates[i + 1]:
 
-                    print(item, i)
+                    logger.debug(item, i)
                 else:
 
                     dates_nodoublecates.insert(i + 1, item - 1)
@@ -738,7 +735,7 @@ class Apps(QDialog):
                 gdata.update({"Available": item})
             else:
                 gdata.update({str(random.randint(0, 1000)): item})
-        print(gdata)
+        logger.debug(gdata)
         logger.debug("11111")
 
         self.tables = create_table(data=gdata, height=len(gdata), width=4)
@@ -756,7 +753,7 @@ class Apps(QDialog):
         self.tables.resizeRowsToContents()
 
         playing_users = get_in_game_users()
-        print(playing_users)
+        logger.debug(playing_users)
         logger.debug("2222")
         tests = []
         for i, item in enumerate(playing_users):
@@ -769,7 +766,8 @@ class Apps(QDialog):
         playing_users_for_table = {}
         for i, item in enumerate(tests):
             playing_users_for_table.update({str(random.randint(0, 1000)): item})
-        print(playing_users_for_table)
+
+        logger.debug(playing_users_for_table)
 
         self.playing_users_tables = create_table(data=playing_users_for_table, height=len(playing_users_for_table),width=4)
         logger.debug("55555")
@@ -927,6 +925,8 @@ class Apps(QDialog):
             self.reset_btn.setDefault(True)
 
 
+    def show_messagebox(self,x,y):
+        QMessageBox.information(self,x,y)
 
     def booking_type_function(self):
         logger.debug("booking_type_function has been called")
@@ -1209,7 +1209,7 @@ class Apps(QDialog):
         current_row = self.playing_users_tables.currentRow()
         current_column = self.playing_users_tables.currentColumn()
         cell_value = self.playing_users_tables.item(current_row, current_column).text()
-        print(cell_value)
+        logger.debug(cell_value)
         try:
             if cell_value.isdigit():
                 dlg = QMessageBox(self)
@@ -1239,7 +1239,7 @@ class Apps(QDialog):
                     except:
                         QMessageBox.warning(self, "تحذير", "لا توجد بيانات لهذا المستخدم")
 
-                    print(f"User {cell_value} has been deleted")
+                    logger.debug(f"User {cell_value} has been deleted")
 
 
 
@@ -1308,7 +1308,8 @@ class Apps(QDialog):
             logger.debug("Some of dict(data) is larger than available")
             return not_avail
 
-
+    def show_msg(self):
+        QMessageBox.information(self,"asdasd",'asdasdasd')
     def submit(self):
 
         global data
@@ -1396,14 +1397,144 @@ class Apps(QDialog):
             else:
                 window.show()
         except:
-            print("hi")
+            logger.debug("hi")
 
     def info(self,window):
 
         QMessageBox.information(self,"معلومات عن البرنامج ",f"تم انشاء هذا البرنامج بواسطة {APP_AUTHOR} للكلية العسكرية التقنية\n\n  إصدار البرنامج: {APP_VERSION} \n\n للاستفسار و الابلاغات: 90625671")
         logger.debug("Info button has been clicked")
 
+
+
+
+class ThreadWithReturnValue(Thread):
+
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+
+    def run(self):
+        if self._target is not None:
+            self._return = self._target(*self._args,
+                                        **self._kwargs)
+
+    def join(self, *args):
+        Thread.join(self, *args)
+        return self._return
+
+
+class Timer(QDialog):
+    """
+    This "window" is a QWidget. If it has no parent,
+    it will appear as a free-floating window.
+    """
+
+
+
+
+
+
+    def get_finish_date(self,timer):
+
+        times = datetime.datetime.now().time().strftime(f'%H:%M:%S')
+        logger.debug("Before: ",times)
+        hour,minut,sec = str(times).split(':')[0],str(times).split(':')[1],str(times).split(':')[2]
+        hour = int(hour)
+        minut = int(minut)
+        sec = int(sec)
+        total = hour+minut/60+sec/3600
+        try:
+
+            time = int(timer.split(":")[0])+int(timer.split(":")[1])/60
+            total+=time
+            hour = int(total)
+            minuts = round(float((total - int(total)) * 60))
+            if hour>=24:
+                hour = hour-24
+            times = f"{hour}:{minuts}:{sec}"
+            logger.debug("After adding: ",times)
+            return times
+
+
+        except Exception:
+            logger.debug("time adding format isn't correct")
+            return "Error"
+
+
+    timeers = "0:01"
+
+
+
+    def counting_time(self,student_id,timing):
+        while True:
+            time.sleep(1)
+            times = datetime.datetime.now().time().strftime(f'%H:%M:%S')  # get current time
+            s_time = times.split(":")
+            for index, i in enumerate(s_time):
+                if i.startswith("0") and len(i) > 1:
+                    s_time[index] = i.replace("0", "")
+            times = s_time[0] + ":" + s_time[1] + ":" + s_time[2]
+
+            logger.debug("before: ",timing,"After: ",times)
+            logger.debug(int(timing.split(":")[0]) <= int(times.split(":")[0]) and int(timing.split(":")[1]) <= int(times.split(":")[1]) and int(timing.split(":")[2]))
+            if int(timing.split(":")[0]) <= int(times.split(":")[0]) and int(timing.split(":")[1]) <= int(times.split(":")[1]) and int(timing.split(":")[2]) <= int(times.split(":")[2]):
+                #logger.debug(f"{student_id}: Times UP!!!!")
+
+                return student_id, "Times UP"
+            else:
+                return student_id, "still"
+
+
+
+
+def check_time():
+    while True:
+        time.sleep(2)
+
+        playing_users = get_in_game_users()
+        logger.debug(playing_users)
+
+        timings = {}
+        for i, item in enumerate(playing_users):
+            timings.update({item: playing_users[item][2]})
+        logger.debug(timings)
+
+        for index, i in enumerate(timings):
+            thread2 = ThreadWithReturnValue(target=Timer.counting_time, args=[Timer.counting_time, i, timings[i]])
+            thread2.start()
+            student_id, fun_value = thread2.join()
+
+            logger.debug(student_id, fun_value)
+            if fun_value == "Times UP":
+                logger.debug("Registering user as finished....")
+
+                update_availability_minus(str(student_id))
+                set_user_game_status(str(student_id))
+                #QMessageBox.information(self, "معلومات", "تم تسجيل إنهاء اللعب للمستخدم")
+                logger.debug(f"Return (Finished) for user: {student_id} Has succeed")
+                playing_number = 0
+                playing_users = get_in_game_users()
+                logger.debug(playing_users)
+                for i in playing_users:
+                    playing_number += 1
+                #self.current_playing.setText(f"المستخدمون قيد اللعب الان: {playing_number}")
+                logger.debug(student_id, "Has finished")
+                logger.debug(f"Currently playing users is updated: {playing_number}")
+                break
+
+
+
+
+
+
+#threas = Thread(target=check_time)
+#threas.start()
 dialog = Apps()
 dialog.show()
 app.exec_()
+
+
+
+
 logger.debug("App has been closed")
